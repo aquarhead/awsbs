@@ -1,0 +1,10 @@
+[package]
+name = "awsbs"
+description = "AWS Basics, Synchronously"
+version = "0.1.0"
+authors = ["LOU Xun <aquarhead@ela.build>"]
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
