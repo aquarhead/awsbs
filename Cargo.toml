@@ -6,5 +6,12 @@ authors = ["LOU Xun <aquarhead@ela.build>"]
 license = "MIT"
 edition = "2018"
 
+[features]
+default = ["time", "http"]
+
 [dependencies]
 anyhow = "1.0"
+hmac = "0.7"
+sha2 = "0.8"
+time = { version = "0.2", default-features = false, features = ["std"], optional = true }
+http = { version = "0.2", optional = true }
