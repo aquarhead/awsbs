@@ -1,5 +1,8 @@
 use hmac::{Hmac, Mac};
-use http::Request;
+use http::{
+  header::{HeaderValue, AUTHORIZATION},
+  Request,
+};
 use sha2::{Digest, Sha256};
 use time::OffsetDateTime;
 
@@ -59,9 +62,17 @@ where
     algorithm, request_datetime, credential_scope, hashed_canoniacl_request
   );
 
-  let sign_key = derive_sign_key(conf, service, &date);
+  let derived_sign_key = derive_sign_key(conf, service, &date);
+  let signature = hs256_hex(derived_sign_key.as_bytes(), &string_to_sign);
 
-  //
+  let hv = format!(
+    "{} Credential={}, SignedHeaders={}, Signature={}",
+    algorithm, credential_scope, signed_headers, signature
+  );
+
+  req
+    .headers_mut()
+    .insert(AUTHORIZATION, HeaderValue::from_str(&hv).unwrap());
 }
 
 fn derive_sign_key(conf: &Configuration, service: &str, date: &str) -> String {
@@ -72,17 +83,19 @@ fn derive_sign_key(conf: &Configuration, service: &str, date: &str) -> String {
   };
   let k_region = hs256(&k_date, &conf.region);
   let k_service = hs256(&k_region, service);
-  {
-    let mut h = HmacSha256::new_varkey(&k_service).unwrap();
-    h.input("aws4_request".as_bytes());
-    format!("{:x}", h.result().code())
-  }
+  hs256_hex(&k_service, "aws4_request")
 }
 
 fn hs256(key: &[u8], data: &str) -> Vec<u8> {
   let mut h = HmacSha256::new_varkey(key).unwrap();
   h.input(data.as_bytes());
   h.result().code().iter().map(|x| x.to_owned()).collect()
+}
+
+fn hs256_hex(key: &[u8], data: &str) -> String {
+  let mut h = HmacSha256::new_varkey(key).unwrap();
+  h.input(data.as_bytes());
+  format!("{:x}", h.result().code())
 }
 
 #[cfg(test)]
@@ -103,5 +116,10 @@ mod tests {
         "20150830",
       )
     )
+  }
+
+  #[test]
+  fn test_sign_request() {
+    //
   }
 }
