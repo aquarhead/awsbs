@@ -8,6 +8,15 @@ use time::OffsetDateTime;
 
 use crate::{consts::*, Configuration};
 
+/// Usage:
+///
+/// ```ignore
+/// Request::builder()
+/// .method("GET")
+/// .uri("https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08")
+/// .sign("", "application/json", conf, "iam")
+/// .unwrap();
+/// ```
 pub trait SignSupported {
   fn sign<'a>(
     self,
@@ -44,42 +53,6 @@ impl SignSupported for Builder {
 
     Ok(res)
   }
-}
-
-/// Usage:
-///
-/// ```ignore
-/// Request::builder()
-/// .method("GET")
-/// .uri("https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08")
-/// .sign("", conf, "iam")
-/// .unwrap();
-/// ```
-pub fn sign<'a>(
-  rb: Builder,
-  body: &'a str,
-  conf: &Configuration,
-  service: &str,
-) -> Result<Request<&'a str>> {
-  let datetime = OffsetDateTime::now().format("%Y%m%dT%H%M%SZ");
-  let host = rb.uri_ref().unwrap().host().unwrap().to_owned();
-  let auth = create_signed_auth_header(
-    rb.method_ref().unwrap().as_str(),
-    rb.uri_ref().unwrap(),
-    body,
-    &datetime,
-    conf,
-    service,
-  );
-
-  let res = rb
-    .header(HOST, &host)
-    .header(CONTENT_TYPE, CT_VALUE)
-    .header(AMZ_DATE, datetime)
-    .header(AUTHORIZATION, auth)
-    .body(body)?;
-
-  Ok(res)
 }
 
 /// Sign a "prepared" `Request`, which:
