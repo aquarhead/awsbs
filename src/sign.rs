@@ -24,7 +24,7 @@ pub fn sign<'a>(
   service: &str,
 ) -> Result<Request<&'a str>> {
   let datetime = OffsetDateTime::now().format("%Y%m%dT%H%M%SZ");
-
+  let host = rb.uri_ref().unwrap().host().unwrap().to_owned();
   let auth = create_signed_auth_header(
     rb.method_ref().unwrap().as_str(),
     rb.uri_ref().unwrap(),
@@ -35,7 +35,7 @@ pub fn sign<'a>(
   );
 
   let res = rb
-    .header(HOST, "iam.amazonaws.com")
+    .header(HOST, &host)
     .header(CONTENT_TYPE, CT_VALUE)
     .header(AMZ_DATE, datetime)
     .header(AUTHORIZATION, auth)
