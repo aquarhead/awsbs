@@ -8,6 +8,44 @@ use time::OffsetDateTime;
 
 use crate::{consts::*, Configuration};
 
+pub trait SignSupported {
+  fn sign<'a>(
+    self,
+    body: &'a str,
+    conf: &Configuration,
+    service: &str,
+  ) -> Result<Request<&'a str>>;
+}
+
+impl SignSupported for Builder {
+  fn sign<'a>(
+    self,
+    body: &'a str,
+    conf: &Configuration,
+    service: &str,
+  ) -> Result<Request<&'a str>> {
+    let datetime = OffsetDateTime::now().format("%Y%m%dT%H%M%SZ");
+    let host = self.uri_ref().unwrap().host().unwrap().to_owned();
+    let auth = create_signed_auth_header(
+      self.method_ref().unwrap().as_str(),
+      self.uri_ref().unwrap(),
+      body,
+      &datetime,
+      conf,
+      service,
+    );
+
+    let res = self
+      .header(HOST, &host)
+      .header(CONTENT_TYPE, CT_VALUE)
+      .header(AMZ_DATE, datetime)
+      .header(AUTHORIZATION, auth)
+      .body(body)?;
+
+    Ok(res)
+  }
+}
+
 /// Usage:
 ///
 /// ```ignore
