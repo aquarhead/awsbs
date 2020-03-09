@@ -5,7 +5,7 @@ AWS **B**asics, **S**ynchronously.
 A simple crate providing 2 general things needed to call AWS APIs:
 
 - [x] Load configuration
-- [ ] Sign request ([Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) only)
+- [x] Sign request ([Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) only)
 
 Loading configuration requires reading files, this crate (currently) makes some basic guesses and read files synchronously.
 

@@ -1,4 +1,4 @@
-use anyhow::{Error, Result};
+use anyhow::{anyhow, Result};
 use std::env::var;
 use std::fs::read_to_string;
 use std::path::PathBuf;
@@ -31,7 +31,7 @@ impl Configuration {
     } else if let Ok(c) = Self::from_profile_static("default") {
       Ok(c)
     } else {
-      Err(Error::msg("failed to find configuration automatically"))
+      Err(anyhow!("failed to find configuration automatically"))
     }
   }
 
@@ -79,7 +79,7 @@ impl Configuration {
       }
 
       if !profile_found {
-        return Err(Error::msg("profile not found in credentials"));
+        return Err(anyhow!("profile not found in credentials"));
       }
 
       (key, secret)
@@ -118,16 +118,16 @@ impl Configuration {
       }
 
       if !profile_found {
-        return Err(Error::msg("profile not found in config"));
+        return Err(anyhow!("profile not found in config"));
       }
 
       region
     };
 
     Ok(Self {
-      region: region.ok_or(Error::msg("region not found for profile"))?,
-      key: key.ok_or(Error::msg("aws_access_key_id not found for profile"))?,
-      secret: secret.ok_or(Error::msg("aws_secret_access_key not found for profile"))?,
+      region: region.ok_or(anyhow!("region not found for profile"))?,
+      key: key.ok_or(anyhow!("aws_access_key_id not found for profile"))?,
+      secret: secret.ok_or(anyhow!("aws_secret_access_key not found for profile"))?,
     })
   }
 
