@@ -252,7 +252,7 @@ mod tests {
     };
 
     let mut req = Request::get(
-      "https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08",
+      "https://iam.amazonaws.com/?Version=2010-05-08&Action=ListUsers",
     )
     .header(HOST, "iam.amazonaws.com")
     .header(
