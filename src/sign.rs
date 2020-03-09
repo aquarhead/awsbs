@@ -21,6 +21,7 @@ pub trait SignSupported {
   fn sign<'a>(
     self,
     body: &'a str,
+    content_type: &str,
     conf: &Configuration,
     service: &str,
   ) -> Result<Request<&'a str>>;
@@ -30,6 +31,7 @@ impl SignSupported for Builder {
   fn sign<'a>(
     self,
     body: &'a str,
+    content_type: &str,
     conf: &Configuration,
     service: &str,
   ) -> Result<Request<&'a str>> {
@@ -39,6 +41,7 @@ impl SignSupported for Builder {
       self.method_ref().unwrap().as_str(),
       self.uri_ref().unwrap(),
       body,
+      content_type,
       &datetime,
       conf,
       service,
@@ -46,7 +49,7 @@ impl SignSupported for Builder {
 
     let res = self
       .header(HOST, &host)
-      .header(CONTENT_TYPE, CT_VALUE)
+      .header(CONTENT_TYPE, content_type)
       .header(AMZ_DATE, datetime)
       .header(AUTHORIZATION, auth)
       .body(body)?;
@@ -69,12 +72,13 @@ pub fn sign_prepared<T>(
 ) where
   T: AsRef<[u8]>,
 {
-  let datetime = req.headers().get("x-amz-date").unwrap().to_str().unwrap();
+  let datetime = req.headers().get(AMZ_DATE).unwrap().to_str().unwrap();
 
   let hv = create_signed_auth_header(
     req.method().as_str(),
     req.uri(),
     req.body(),
+    req.headers().get(CONTENT_TYPE).unwrap().to_str().unwrap(),
     datetime,
     conf,
     service,
@@ -89,6 +93,7 @@ fn create_signed_auth_header<T>(
   method: &str,
   uri: &Uri,
   body: T,
+  content_type: &str,
   datetime: &str,
   conf: &Configuration,
   service: &str,
@@ -102,7 +107,7 @@ where
 
   let derived_sign_key = derive_sign_key(conf, service, &date);
 
-  let cr = build_canonical_request(method, uri, datetime, body);
+  let cr = build_canonical_request(method, uri, datetime, body, content_type);
   let cs = build_credential_scope(date, &conf.region, service);
   let sts = create_string_to_sign(&cr, datetime, &cs);
   signed_auth_header(&derived_sign_key, &conf.key, &sts, &cs)
@@ -122,6 +127,7 @@ mod internal {
     uri: &Uri,
     dt: &str,
     body: T,
+    content_type: &str,
   ) -> String
   where
     T: AsRef<[u8]>,
@@ -150,7 +156,7 @@ mod internal {
 
     let canonical_headers = format!(
       "content-type:{}\nhost:{}\nx-amz-date:{}\n",
-      CT_VALUE,
+      content_type,
       uri.host().unwrap(),
       dt
     );
