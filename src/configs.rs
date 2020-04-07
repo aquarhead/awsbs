@@ -16,7 +16,11 @@ pub struct Configuration {
 
 impl Configuration {
   pub fn from_static(region: String, key: String, secret: String) -> Self {
-    Self { region, key, secret }
+    Self {
+      region,
+      key,
+      secret,
+    }
   }
 
   /// Precedence:
@@ -127,7 +131,8 @@ impl Configuration {
     Ok(Self {
       region: region.ok_or(anyhow!("region not found for profile"))?,
       key: key.ok_or(anyhow!("aws_access_key_id not found for profile"))?,
-      secret: secret.ok_or(anyhow!("aws_secret_access_key not found for profile"))?,
+      secret: secret
+        .ok_or(anyhow!("aws_secret_access_key not found for profile"))?,
     })
   }
 
