@@ -134,25 +134,25 @@ mod internal {
   {
     let canonical_uri = uri.path();
 
-    let canonical_query_string = {
-      let mut queries: Vec<(&str, &str)> = uri
-        .query()
-        .unwrap_or("")
-        .split("&")
-        .map(|x| {
-          let mut parts = x.split("=");
-          (parts.next().unwrap_or(""), parts.next().unwrap_or(""))
-        })
-        .collect();
+    let canonical_query_string = uri
+      .query()
+      .map(|queries| {
+        let mut qs: Vec<(&str, &str)> = queries
+          .split("&")
+          .map(|x| {
+            let mut parts = x.split("=");
+            (parts.next().unwrap_or(""), parts.next().unwrap_or(""))
+          })
+          .collect();
 
-      queries.sort();
+        qs.sort();
 
-      queries
-        .iter()
-        .map(|(k, v)| format!("{}={}", k, v))
-        .collect::<Vec<_>>()
-        .join("&")
-    };
+        qs.iter()
+          .map(|(k, v)| format!("{}={}", k, v))
+          .collect::<Vec<_>>()
+          .join("&")
+      })
+      .unwrap_or("".to_owned());
 
     let canonical_headers = format!(
       "content-type:{}\nhost:{}\nx-amz-date:{}\n",
